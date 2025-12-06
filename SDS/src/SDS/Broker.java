@@ -1,4 +1,4 @@
-package SDS.src.SDS;
+package SDS;
 
 import java.util.ArrayList;
 import java.util.Iterator;

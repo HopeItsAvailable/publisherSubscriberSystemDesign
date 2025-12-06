@@ -1,4 +1,4 @@
-package SDS.src.SDS;
+package SDS;
 
 /**
  * Enumeration representing all the restaurant locations.
