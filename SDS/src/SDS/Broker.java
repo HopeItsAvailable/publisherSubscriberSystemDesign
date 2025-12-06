@@ -65,9 +65,36 @@ public class Broker {
         Iterator<DiningSubscriber> subIterator = subscribers.iterator();
 
         while (subIterator.hasNext()) {
-            Iterator<FoodItem> invIterator = inventory.iterator(); //reset iterator each time
             DiningSubscriber subscriber = subIterator.next(); // actual subscriber object
-            // check if the subscriber is interested in any of the food items in inventory
+            Iterator<FoodItem> invIterator = inventory.iterator(); //reset iterator each time
+
+            //add an initial pass for the cumulative fulfillment test cases, if it has enough food to fulfill the request from multiple
+            //restaurants, then we go into inner loop, otherwise we skip to the next subscriber
+            int totalAvailableFoodQty = 0;
+
+            for (FoodItem food : inventory) {
+                boolean nameMatch = subscriber.getDesiredFoodName().equalsIgnoreCase(food.getItemName());
+                boolean locationMatch;
+                boolean timeMatch;
+
+                if (subscriber.getPreferredLocation() == null) {
+                    locationMatch = true;
+                } else {
+                    locationMatch = subscriber.getPreferredLocation().equals(food.getLocation());
+                }
+
+                timeMatch = subscriber.getRequestStart().isBefore(food.getAvailabilityEnd())
+                        && subscriber.getRequestEnd().isAfter(food.getAvailabilityStart());
+
+                if (nameMatch && locationMatch && timeMatch) {
+                    totalAvailableFoodQty += food.getQuantity();
+                }
+            }
+
+            if (totalAvailableFoodQty < subscriber.getDesiredQuantity()) {
+                continue;
+            }
+
             while (invIterator.hasNext()) {
                 FoodItem foodItem = invIterator.next(); // actual food item object
 
@@ -90,10 +117,6 @@ public class Broker {
                     // match found
                     int amtToNotify = Math.min(subscriber.getDesiredQuantity(), foodItem.getQuantity());
 
-                    //was breaking testInsufficientQuantity, so had to add a check to skip if the restaurant cannot fully satisfy the request
-                    if (subscriber.getPreferredLocation() != null && amtToNotify < subscriber.getDesiredQuantity()) {
-                        continue;
-                    }
                     // sample output format:
                     // John Doe is notified of 1 Grilled Chicken available at Tooker House in Tempe
                     // between 03/13/2025 11:00 and 03/13/2025 15:00.
