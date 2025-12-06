@@ -1,5 +1,6 @@
 package SDS;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,8 @@ public class Broker {
 	 */
 	private List<String> notifications;
 
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+
 	/**
 	 * Equivalent to getReference of slide 11 of singleton pattern slides. Returns
 	 * this broker.
@@ -62,6 +65,8 @@ public class Broker {
 		Iterator<DiningSubscriber> subIterator = subscribers.iterator();
 		Iterator<FoodItem> invIterator = inventory.iterator();
 
+        boolean readyToRemove = false;
+
 		while (subIterator.hasNext()) {
 			DiningSubscriber subscriber = subIterator.next(); // actual subscriber object
 			// check if the subscriber is interested in any of the food items in inventory
@@ -76,7 +81,7 @@ public class Broker {
 				if (subscriber.getPreferredLocation() == null) {
 					locationMatch = true;
 				} else {
-					locationMatch = subscriber.getPreferredLocation().equals(foodItem.getRestaurantName());
+                    locationMatch = subscriber.getPreferredLocation().equals(foodItem.getLocation());
 				}
 
 				// check time match. Logic: If sub.start < food.end and sub.end > food.start
@@ -85,8 +90,12 @@ public class Broker {
 
 				if (nameMatch && locationMatch && timeMatch) {
 					// match found
-					int amtToNotify = Math.min(subscriber.getDesiredQuantity(), foodItem.getQuantity()); // this is the
-																											// amount x
+                    int amtToNotify = Math.min(subscriber.getDesiredQuantity(), foodItem.getQuantity());
+
+                    //was breaking testInsufficientQuantity, so had to add a check to skip if the restaurant cannot fully satisfy the request
+                    if (subscriber.getPreferredLocation() != null && amtToNotify < subscriber.getDesiredQuantity()) {
+                        continue;
+                    }
 																											// person is
 																											// getting
 					// sample output format:
@@ -99,14 +108,15 @@ public class Broker {
 							foodItem.getItemName(),
 							foodItem.getRestaurantName(),
 							foodItem.getLocation().toString(),
-							foodItem.getAvailabilityStart(),
-							foodItem.getAvailabilityEnd());
+                            foodItem.getAvailabilityStart().format(formatter), //have to format
+                            foodItem.getAvailabilityEnd().format(formatter)
+                    );
 
 					notifications.add(notification); // add to notifications list for output
 
 					// update quantities
 					foodItem.quantity -= amtToNotify;
-					subscriber.setDesiredQuantity(subscriber.getDesiredQuantity() - amtToNotify); // eg if they wanted 3
+					subscriber.setDesiredQuantity(subscriber.getDesiredQuantity()-amtToNotify); // eg if they wanted 3
 																									// and got 1, now
 																									// want 2
 					// remove food item if quantity is 0

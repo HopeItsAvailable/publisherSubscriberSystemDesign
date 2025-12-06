@@ -1,5 +1,6 @@
 package SDS;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -8,6 +9,8 @@ import java.time.LocalDateTime;
  * Uses a Broker instance to manage communication between DiningPublisher and DiningSubscriber.
  */
 public class Testing {
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm"); //was breaking without this
 
     /**
      * Constructor without any arguments.
@@ -42,8 +45,8 @@ public class Testing {
                 String restaurant = parts[1];
                 String food = parts[2];
                 int quantity = Integer.parseInt(parts[3]);
-                LocalDateTime start = LocalDateTime.parse(parts[4]);
-                LocalDateTime end = LocalDateTime.parse(parts[5]);
+                LocalDateTime start = LocalDateTime.parse(parts[4], formatter);
+                LocalDateTime end = LocalDateTime.parse(parts[5], formatter);
                 CampusLocation location = CampusLocation.valueOf(parts[6].toUpperCase());
 
                 Restaurant r = new Restaurant(restaurant);
@@ -56,8 +59,8 @@ public class Testing {
                 String diner = parts[1];
                 String food = parts[2];
                 int quantity = Integer.parseInt(parts[3]);
-                LocalDateTime start = LocalDateTime.parse(parts[4]);
-                LocalDateTime end = LocalDateTime.parse(parts[5]);
+                LocalDateTime start = LocalDateTime.parse(parts[4], formatter);
+                LocalDateTime end = LocalDateTime.parse(parts[5], formatter);
 
                 CampusLocation location = null;
                 if (parts.length == 7) {
@@ -69,6 +72,7 @@ public class Testing {
             }
         } catch (Exception e) {
             //do nothing if an error is found
+            //e.printStackTrace();
             return;
         }
     }
